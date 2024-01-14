@@ -1,0 +1,6 @@
+websocket test urls 
+https://socketsbay.com/test-websockets
+wss://socketsbay.com/wss/v2/1/demo/
+wss://wss.tradernet.com
+wss://ws.bitstamp.net
+
