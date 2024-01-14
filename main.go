@@ -16,14 +16,11 @@ import (
 )
 
 func main() {
-	var style = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#6495ed"))
-
 	urlParam := flag.String("u", "", "url to connect")
 	messageParam := flag.String("m", "", "data send to server")
 	queryParam := flag.String("q", "", "query params")
 	verboseParam := flag.Bool("v", false, "show response server headers")
+	headerP := flag.String("h", "", "header params")
 
 	flag.Parse()
 
@@ -43,9 +40,16 @@ func main() {
 	}
 	fmt.Printf("connecting to %s\n", u.String())
 
-	header := http.Header{
-		"Authorization": {"Bearer YourAccessToken"},
-		"CustomHeader":  {"CustomValue"},
+	header := http.Header{}
+	if *headerP != "" {
+		headers := strings.Split(*headerP, "&")
+		for _, h := range headers {
+			h := strings.Split(h, "=")
+			if len(h) != 2 {
+				continue
+			}
+			header.Add(h[0], h[1])
+		}
 	}
 
 	c, response, err := websocket.DefaultDialer.Dial(u.String(), header)
@@ -55,6 +59,10 @@ func main() {
 	defer c.Close()
 
 	if *verboseParam {
+		var style = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#6495ed"))
+
 		sh := lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("#ff69b4"))
@@ -100,7 +108,6 @@ func main() {
 		case <-done:
 			return
 		case <-interrupt:
-			// Close the connection gracefully before exiting
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
 				log.Println("write close:", err)
