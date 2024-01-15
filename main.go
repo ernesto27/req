@@ -32,6 +32,11 @@ func main() {
 	headerP := flag.String("h", "", "header params")
 	flag.Parse()
 
+	if *typeParam == "" {
+		fmt.Println("type connection is required - ws, gq")
+		return
+	}
+
 	params := Params{
 		typeP:   *typeParam,
 		url:     *urlParam,
