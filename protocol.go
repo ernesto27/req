@@ -171,6 +171,59 @@ func (w *Websocket) Close() {
 	w.client.Close()
 }
 
+type HTTP struct {
+	url      string
+	method   string
+	httpResp *http.Response
+	headers  string
+}
+
+func NewHTTP(params Params) *HTTP {
+	return &HTTP{
+		url:     params.url,
+		method:  params.method,
+		headers: params.header,
+	}
+}
+
+func (h *HTTP) RequestResponse() (string, error) {
+	client := &http.Client{}
+
+	m := strings.ToUpper(h.method)
+	// TODO VALIDATE METHOD
+
+	req, err := http.NewRequest(m, h.url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	headersP := getHeaders(h.headers)
+	for _, h := range headersP {
+		req.Header.Add(h.Key, h.Value)
+	}
+
+	response, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	h.httpResp = response
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+func (h *HTTP) OnMessageReceived() {}
+func (h *HTTP) PrintHeaderResponse() {
+	printHttpResponse(h.httpResp)
+}
+func (h *HTTP) Close() {}
+
 func printHttpResponse(r *http.Response) {
 	var style = lipgloss.NewStyle().
 		Bold(true).
@@ -189,4 +242,28 @@ func printHttpResponse(r *http.Response) {
 		r := strings.ReplaceAll(key, " ", "")
 		fmt.Println(r, "->", style.Render(values...))
 	}
+}
+
+type HeaderP struct {
+	Key   string
+	Value string
+}
+
+func getHeaders(headers string) []HeaderP {
+	resp := []HeaderP{}
+	if headers != "" {
+		items := strings.Split(headers, "&")
+		for _, h := range items {
+			h := strings.Split(h, "=")
+			if len(h) != 2 {
+				continue
+			}
+			resp = append(resp, HeaderP{
+				Key:   h[0],
+				Value: h[1],
+			})
+		}
+	}
+
+	return resp
 }

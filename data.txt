@@ -5,9 +5,12 @@ wss://wss.tradernet.com
 wss://ws.bitstamp.net
 
 
-go run . -t gq -u http://localhost:8080/graphql -q 'query {beast(name: "Monocerus") {description id imageUrl name otherNames}}'
+go run . -t gq -u http://localhost:8080/graphql -p 'query {beast(name: "Monocerus") {description id imageUrl name otherNames}}'
 
 
-go run . -t ws -m "some message"  -u wss://socketsbay.com/wss/v2/1/demo/
+go run . -t ws -p "some message"  -u wss://socketsbay.com/wss/v2/1/demo/
 
 go run . -t ws -u wss://socketsbay.com/wss/v2/1/demo/
+
+
+https://jsonplaceholder.typicode.com/guide/

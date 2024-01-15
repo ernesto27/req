@@ -11,6 +11,7 @@ type Params struct {
 	query   string
 	header  string
 	message string
+	method  string
 }
 
 func getProtocol(p Params) Protocol {
@@ -19,17 +20,21 @@ func getProtocol(p Params) Protocol {
 		return NewWebsocket(p)
 	case "gq":
 		return NewGrapQL(p)
+	case "http":
+		return NewHTTP(p)
 	}
 	return nil
 }
 
 func main() {
-	typeParam := flag.String("t", "", "type connection (ws, graphql)")
+	typeParam := flag.String("t", "http", "type connection (ws, gq, http)")
 	urlParam := flag.String("u", "", "url to connect")
-	messageParam := flag.String("m", "", "data send to server")
+	messageParam := flag.String("p", "", "data send to server")
 	queryParam := flag.String("q", "", "query params")
-	verboseParam := flag.Bool("v", false, "show response server headers")
+	verboseParam := flag.Bool("v", true, "show response server headers")
 	headerP := flag.String("h", "", "header params")
+	method := flag.String("m", "GET", "method request")
+
 	flag.Parse()
 
 	if *typeParam == "" {
@@ -43,6 +48,7 @@ func main() {
 		query:   *queryParam,
 		header:  *headerP,
 		message: *messageParam,
+		method:  *method,
 	}
 
 	p := getProtocol(params)
