@@ -3,6 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Params struct {
@@ -31,7 +34,7 @@ func main() {
 	urlParam := flag.String("u", "", "url to connect")
 	messageParam := flag.String("p", "", "data send to server")
 	queryParam := flag.String("q", "", "query params")
-	verboseParam := flag.Bool("v", true, "show response server headers")
+	verboseParam := flag.Bool("v", false, "show response server headers")
 	headerP := flag.String("h", "", "header params")
 	method := flag.String("m", "GET", "method request")
 
@@ -56,7 +59,13 @@ func main() {
 
 	resp, err := p.RequestResponse()
 	if err != nil {
-		panic(err)
+		var styleErr = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color("#e05074")).Padding(1).MarginBottom(1).MarginTop(1)
+
+		fmt.Println(styleErr.Render(err.Error()))
+		os.Exit(1)
 	}
 	fmt.Println()
 	fmt.Println(resp)

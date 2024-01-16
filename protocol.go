@@ -176,6 +176,7 @@ type HTTP struct {
 	method   string
 	httpResp *http.Response
 	headers  string
+	body     string
 }
 
 func NewHTTP(params Params) *HTTP {
@@ -183,6 +184,7 @@ func NewHTTP(params Params) *HTTP {
 		url:     params.url,
 		method:  params.method,
 		headers: params.header,
+		body:    params.message,
 	}
 }
 
@@ -190,9 +192,42 @@ func (h *HTTP) RequestResponse() (string, error) {
 	client := &http.Client{}
 
 	m := strings.ToUpper(h.method)
-	// TODO VALIDATE METHOD
 
-	req, err := http.NewRequest(m, h.url, nil)
+	validMethods := []string{"GET", "POST"}
+
+	found := false
+	for _, vm := range validMethods {
+		if vm == m {
+			found = true
+		}
+	}
+
+	if !found {
+		return "", fmt.Errorf("invalid method %s ", m)
+	}
+
+	var js map[string]interface{}
+	err := json.Unmarshal([]byte(h.body), &js)
+	var d io.Reader
+	var contentType string
+
+	if err != nil {
+		items := getHeaders(h.body)
+		formData := url.Values{}
+		for _, h := range items {
+			formData.Add(h.Key, h.Value)
+		}
+
+		d = strings.NewReader(formData.Encode())
+		contentType = "application/x-www-form-urlencoded"
+	} else {
+		d = bytes.NewBuffer([]byte(h.body))
+		contentType = "application/json"
+	}
+
+	req, err := http.NewRequest(m, h.url, d)
+
+	req.Header.Set("Content-Type", contentType)
 	if err != nil {
 		return "", err
 	}

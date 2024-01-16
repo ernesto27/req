@@ -14,3 +14,10 @@ go run . -t ws -u wss://socketsbay.com/wss/v2/1/demo/
 
 
 https://jsonplaceholder.typicode.com/guide/
+
+go run . -u https://jsonplaceholder.typicode.com/posts/1
+
+
+go run . -m post -u https://jsonplaceholder.typicode.com/posts -p '{"title": "foo", "body": "bar", "userId": 1}'
+
+go run . -m post  -u http://127.0.0.1:8000/sku/idrac_sku -p "tech_hash=dd&idrac_build=333&idrac_model=33&idrac_version=3"
