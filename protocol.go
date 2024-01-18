@@ -89,7 +89,7 @@ func NewWebsocket(params Params) *Websocket {
 		Path:     urlParse.Path,
 		RawQuery: params.query,
 	}
-	fmt.Printf("connecting to %s\n", u.String())
+	fmt.Print(styleInfo.Render("connecting to ", u.String()))
 
 	header := http.Header{}
 	if params.header != "" {
@@ -123,7 +123,7 @@ func (w *Websocket) RequestResponse() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return w.message, nil
+	return "", nil
 }
 
 func (w *Websocket) OnMessageReceived() {
@@ -131,7 +131,6 @@ func (w *Websocket) OnMessageReceived() {
 	signal.Notify(interrupt, os.Interrupt)
 	done := make(chan struct{})
 
-	fmt.Println()
 	go func() {
 		defer close(done)
 		for {
@@ -140,7 +139,7 @@ func (w *Websocket) OnMessageReceived() {
 				log.Println("read:", err)
 				return
 			}
-			fmt.Printf("message received: %s\n", message)
+			fmt.Print(styleMessage.Render("message received:", string(message)))
 		}
 	}()
 
@@ -269,7 +268,7 @@ func printHttpResponse(r *http.Response) {
 		Foreground(lipgloss.Color("#ff69b4"))
 
 	fmt.Println()
-	fmt.Println(sh.Render("RESPONSE HEADERS:"))
+	fmt.Println(sh.Render("RESPONSE SERVER:"))
 	fmt.Println("status -> ", style.Render(r.Status))
 	fmt.Println("protocol ->", style.Render(r.Proto))
 	fmt.Println("content length -> ", style.Render(fmt.Sprint(r.ContentLength)))
@@ -277,6 +276,7 @@ func printHttpResponse(r *http.Response) {
 		r := strings.ReplaceAll(key, " ", "")
 		fmt.Println(r, "->", style.Render(values...))
 	}
+	fmt.Println()
 }
 
 type HeaderP struct {

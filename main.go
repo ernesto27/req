@@ -29,6 +29,21 @@ func getProtocol(p Params) Protocol {
 	return nil
 }
 
+var styleInfo = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("#FAFAFA")).
+	Bold(true).
+	Background(lipgloss.Color("#6699FF")).Padding(1).MarginBottom(1).MarginTop(1).MarginLeft(1)
+
+var styleErr = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("#FAFAFA")).
+	Bold(true).
+	Background(lipgloss.Color("#e05074")).Padding(1).MarginBottom(1).MarginTop(1).MarginLeft(1)
+
+var styleMessage = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(lipgloss.Color("#FAFAFA")).
+	Background(lipgloss.Color("#606683")).Padding(1).MarginBottom(1).MarginTop(1).MarginLeft(1)
+
 func main() {
 	typeParam := flag.String("t", "http", "type connection (ws, gq, http)")
 	urlParam := flag.String("u", "", "url to connect")
@@ -40,9 +55,19 @@ func main() {
 
 	flag.Parse()
 
-	if *typeParam == "" {
-		fmt.Println("type connection is required - ws, gq")
-		return
+	validProtocos := []string{"ws", "gq", "http"}
+
+	valid := false
+	for _, v := range validProtocos {
+		if *typeParam == v {
+			valid = true
+			break
+		}
+	}
+
+	if !valid {
+		fmt.Println(styleErr.Render("Invalid protocol, valid are: http, ws, gq"))
+		os.Exit(0)
 	}
 
 	params := Params{
@@ -59,15 +84,10 @@ func main() {
 
 	resp, err := p.RequestResponse()
 	if err != nil {
-		var styleErr = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#FAFAFA")).
-			Background(lipgloss.Color("#e05074")).Padding(1).MarginBottom(1).MarginTop(1)
-
 		fmt.Println(styleErr.Render(err.Error()))
 		os.Exit(1)
 	}
-	fmt.Println()
+
 	fmt.Println(resp)
 
 	if *messageParam == "" {
@@ -76,7 +96,6 @@ func main() {
 
 	if *verboseParam {
 		p.PrintHeaderResponse()
-
 	}
 
 }
