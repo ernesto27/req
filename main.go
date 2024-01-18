@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -82,20 +85,42 @@ func main() {
 	p := getProtocol(params)
 	defer p.Close()
 
-	resp, err := p.RequestResponse()
-	if err != nil {
-		fmt.Println(styleErr.Render(err.Error()))
-		os.Exit(1)
-	}
-
-	fmt.Println(resp)
-
 	if *messageParam == "" {
 		p.OnMessageReceived()
 	}
 
+	resp, err := p.RequestResponse()
+	if err != nil {
+		fmt.Println(styleErr.Render(err.Error()))
+		os.Exit(0)
+	}
+
+	r, err := PrettyJSON(resp)
+	if err != nil {
+		// If no json response valid, return raw string
+		fmt.Println(resp)
+		os.Exit(0)
+	}
+
+	out, err := glamour.Render(r, "auto")
+	if err != nil {
+		fmt.Println(styleErr.Render(err.Error()))
+		os.Exit(0)
+	}
+	fmt.Print(out)
+
 	if *verboseParam {
 		p.PrintHeaderResponse()
 	}
+}
 
+func PrettyJSON(str string) (string, error) {
+	var pretty bytes.Buffer
+	if err := json.Indent(&pretty, []byte(str), "", "    "); err != nil {
+		return "", err
+	}
+
+	resp := "```json\n" + pretty.String() + "\n```\n"
+
+	return resp, nil
 }
