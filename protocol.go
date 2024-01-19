@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -176,6 +179,7 @@ type HTTP struct {
 	httpResp *http.Response
 	headers  string
 	body     string
+	file     string
 }
 
 func NewHTTP(params Params) *HTTP {
@@ -184,6 +188,7 @@ func NewHTTP(params Params) *HTTP {
 		method:  params.method,
 		headers: params.header,
 		body:    params.message,
+		file:    params.file,
 	}
 }
 
@@ -218,7 +223,41 @@ func (h *HTTP) RequestResponse() (string, error) {
 		}
 
 		d = strings.NewReader(formData.Encode())
-		contentType = "application/x-www-form-urlencoded"
+
+		if h.file != "" {
+			bodyBuf := &bytes.Buffer{}
+			bodyWriter := multipart.NewWriter(bodyBuf)
+
+			pathImg := strings.Split(h.file, "=")
+			if len(pathImg) != 2 {
+				panic(err)
+			}
+
+			file, err := os.Open(pathImg[1])
+			if err != nil {
+				panic(err)
+			}
+			defer file.Close()
+
+			fileWriter, err := bodyWriter.CreateFormFile(pathImg[0], GetRandomString(10)+".png")
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = io.Copy(fileWriter, file)
+			if err != nil {
+				panic(err)
+			}
+
+			contentType = bodyWriter.FormDataContentType()
+			fmt.Println(contentType)
+			_ = bodyWriter.Close()
+			d = bodyBuf
+
+		} else {
+			contentType = "application/x-www-form-urlencoded"
+		}
+
 	} else {
 		d = bytes.NewBuffer([]byte(h.body))
 		contentType = "application/json"
@@ -301,4 +340,13 @@ func getHeaders(headers string) []HeaderP {
 	}
 
 	return resp
+}
+
+func GetRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(result)
 }

@@ -18,6 +18,7 @@ type Params struct {
 	header  string
 	message string
 	method  string
+	file    string
 }
 
 func getProtocol(p Params) Protocol {
@@ -55,6 +56,7 @@ func main() {
 	verboseParam := flag.Bool("v", false, "show response server headers")
 	headerP := flag.String("h", "", "header params")
 	method := flag.String("m", "GET", "method request")
+	file := flag.String("f", "", "file path")
 
 	flag.Parse()
 
@@ -80,6 +82,7 @@ func main() {
 		header:  *headerP,
 		message: *messageParam,
 		method:  *method,
+		file:    *file,
 	}
 
 	p := getProtocol(params)
