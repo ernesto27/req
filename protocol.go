@@ -197,7 +197,7 @@ func (h *HTTP) RequestResponse() (string, error) {
 
 	m := strings.ToUpper(h.method)
 
-	validMethods := []string{"GET", "POST"}
+	validMethods := []string{"GET", "POST", "DELETE", "PUT"}
 
 	found := false
 	for _, vm := range validMethods {
