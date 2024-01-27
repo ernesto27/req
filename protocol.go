@@ -230,27 +230,26 @@ func (h *HTTP) RequestResponse() (string, error) {
 
 			pathImg := strings.Split(h.file, "=")
 			if len(pathImg) != 2 {
-				panic(err)
+				return "", fmt.Errorf("invalid file %s, valid file=myfile.png", h.file)
 			}
 
 			file, err := os.Open(pathImg[1])
 			if err != nil {
-				panic(err)
+				return "", err
 			}
 			defer file.Close()
 
 			fileWriter, err := bodyWriter.CreateFormFile(pathImg[0], GetRandomString(10)+".png")
 			if err != nil {
-				panic(err)
+				return "", err
 			}
 
 			_, err = io.Copy(fileWriter, file)
 			if err != nil {
-				panic(err)
+				return "", err
 			}
 
 			contentType = bodyWriter.FormDataContentType()
-			fmt.Println(contentType)
 			_ = bodyWriter.Close()
 			d = bodyBuf
 

@@ -72,7 +72,7 @@ func main() {
 
 	if !valid {
 		fmt.Println(styleErr.Render("Invalid protocol, valid are: http, ws, gq"))
-		os.Exit(0)
+		return
 	}
 
 	params := Params{
@@ -95,14 +95,18 @@ func main() {
 	resp, err := p.RequestResponse()
 	if err != nil {
 		fmt.Println(styleErr.Render(err.Error()))
-		os.Exit(0)
+		return
 	}
 
 	r, err := PrettyJSON(resp)
 	if err != nil {
-		// If no json response valid, return raw string
-		fmt.Println(resp)
-		os.Exit(0)
+		out, err := glamour.Render(resp, "auto")
+		if err != nil {
+			fmt.Println(styleErr.Render(err.Error()))
+			return
+		}
+		fmt.Print(out)
+		return
 	}
 
 	out, err := glamour.Render(r, "auto")
