@@ -1,4 +1,4 @@
-module req
+module github.com/ernesto27/req
 
 go 1.21.5
 
