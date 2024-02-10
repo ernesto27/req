@@ -6,9 +6,17 @@ Support this protocos:
 - Websocket
 
 # Install
-TODO
 
 Using go 
+```bash
+$ go install github.com/ernesto27/req@latest
+```
+
+Using brew
+```bash
+$ brew install ernesto27/tools/req
+```
+
 
 
 # Usage 

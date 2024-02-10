@@ -60,6 +60,11 @@ func main() {
 
 	flag.Parse()
 
+	if *urlParam == "" {
+		flag.PrintDefaults()
+		return
+	}
+
 	validProtocos := []string{"ws", "gq", "http"}
 
 	valid := false
