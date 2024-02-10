@@ -103,18 +103,31 @@ func main() {
 		return
 	}
 
+	myRender, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(140),
+	)
+
+	if err != nil {
+		fmt.Println(styleErr.Render(err.Error()))
+		return
+	}
+
 	r, err := PrettyJSON(resp)
 	if err != nil {
-		out, err := glamour.Render(resp, "auto")
+		dr, err := myRender.Render("```html\n" + resp + "\n```\n")
 		if err != nil {
 			fmt.Println(styleErr.Render(err.Error()))
 			return
 		}
-		fmt.Print(out)
+		fmt.Print(dr)
+		if *verboseParam {
+			p.PrintHeaderResponse()
+		}
 		return
 	}
 
-	out, err := glamour.Render(r, "auto")
+	out, err := myRender.Render(r)
 	if err != nil {
 		fmt.Println(styleErr.Render(err.Error()))
 		os.Exit(0)
