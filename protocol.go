@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 
 	"encoding/json"
 	"fmt"
@@ -17,7 +18,12 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/fullstorydev/grpcurl"
 	"github.com/gorilla/websocket"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 type Protocol interface {
@@ -315,6 +321,116 @@ func printHttpResponse(r *http.Response) {
 		fmt.Println(r, "->", style.Render(values...))
 	}
 	fmt.Println()
+}
+
+type GRPC struct {
+	cc         *grpc.ClientConn
+	url        string
+	importPath string
+	proto      string
+	message    string
+	methodName string
+}
+
+func NewGRPC(params Params) *GRPC {
+	return &GRPC{
+		url:        params.url,
+		importPath: params.importPath,
+		proto:      params.proto,
+		message:    params.message,
+		methodName: params.methodName,
+	}
+}
+
+func (g *GRPC) RequestResponse() (string, error) {
+	ctx := context.Background()
+	dial := func() (*grpc.ClientConn, error) {
+		dialTime := 10 * time.Second
+		ctx, cancel := context.WithTimeout(ctx, dialTime)
+		defer cancel()
+		var opts []grpc.DialOption
+
+		network := "tcp"
+		var creds credentials.TransportCredentials
+
+		grpcurlUA := "grpcurl/" + "dev build <no version set>"
+
+		opts = append(opts, grpc.WithUserAgent(grpcurlUA))
+		target := g.url
+		cc, err := grpcurl.BlockingDial(ctx, network, target, creds, opts...)
+		if err != nil {
+			return nil, err
+		}
+		return cc, nil
+	}
+
+	var descSource grpcurl.DescriptorSource
+	var fileSource grpcurl.DescriptorSource
+
+	importPaths := []string{g.importPath}
+	protoFiles := []string{g.proto}
+
+	var err error
+	fileSource, err = grpcurl.DescriptorSourceFromProtoFiles(importPaths, protoFiles...)
+	if err != nil {
+		return "", err
+	}
+
+	descSource = fileSource
+
+	if g.cc == nil {
+		g.cc, err = dial()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	in := strings.NewReader(g.message)
+
+	options := grpcurl.FormatOptions{
+		EmitJSONDefaultFields: true,
+		IncludeTextSeparator:  true,
+		AllowUnknownFields:    true,
+	}
+	rf, formatter, err := grpcurl.RequestParserAndFormatter(grpcurl.Format("json"), descSource, in, options)
+	if err != nil {
+		panic(err)
+	}
+
+	var buf bytes.Buffer
+
+	h := &grpcurl.DefaultEventHandler{
+		Out:            &buf,
+		Formatter:      formatter,
+		VerbosityLevel: 1,
+	}
+
+	symbol := g.methodName
+	err = grpcurl.InvokeRPC(ctx, descSource, g.cc, symbol, append([]string{}, []string{}...), h, rf.Next)
+
+	if err != nil {
+		if errStatus, ok := status.FromError(err); ok && false {
+			h.Status = errStatus
+		} else {
+			return "", err
+		}
+	}
+
+	if h.Status.Code() != codes.OK {
+		grpcurl.PrintStatus(os.Stderr, h.Status, formatter)
+	}
+
+	return buf.String(), nil
+}
+
+func (g *GRPC) OnMessageReceived()   {}
+func (g *GRPC) PrintHeaderResponse() {}
+
+func (g *GRPC) Close() {
+	if g.cc != nil {
+		g.cc.Close()
+		g.cc = nil
+	}
 }
 
 type HeaderP struct {
