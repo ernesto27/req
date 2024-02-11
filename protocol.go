@@ -330,6 +330,7 @@ type GRPC struct {
 	proto      string
 	message    string
 	methodName string
+	verbose    bool
 }
 
 func NewGRPC(params Params) *GRPC {
@@ -339,6 +340,7 @@ func NewGRPC(params Params) *GRPC {
 		proto:      params.proto,
 		message:    params.message,
 		methodName: params.methodName,
+		verbose:    params.verbose,
 	}
 }
 
@@ -399,10 +401,15 @@ func (g *GRPC) RequestResponse() (string, error) {
 
 	var buf bytes.Buffer
 
+	v := 0
+	if g.verbose {
+		v = 1
+	}
+
 	h := &grpcurl.DefaultEventHandler{
 		Out:            &buf,
 		Formatter:      formatter,
-		VerbosityLevel: 1,
+		VerbosityLevel: v,
 	}
 
 	symbol := g.methodName

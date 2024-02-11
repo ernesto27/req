@@ -58,6 +58,16 @@ Send query to graphql server
 $ req . -t gq -u https://countries.trevorblades.com/ -p 'query {countries {name}}'
 ```
 
+### GRPC
+
+Send request to grpc server
+```bash
+$ req -t grpc -u localhost:50051 -import-path /pathprotofiles/helloworld -proto helloworld.proto -p '{"name": "ernesto"}' -method helloworld.Greeter.SayHello
+```
+
+
+
+
 # Parameters
 
 | Parameter | Description |
@@ -69,6 +79,9 @@ $ req . -t gq -u https://countries.trevorblades.com/ -p 'query {countries {name}
 | -q | http query params |
 | -h | http headers |
 | -v | show server header response |
+| -import-path | GRPC - path to proto files |
+| -proto | GRPC - proto file name |
+| -method | GRPC - method to call |
 
 
 
