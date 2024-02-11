@@ -12,13 +12,17 @@ import (
 )
 
 type Params struct {
-	typeP   string
-	url     string
-	query   string
-	header  string
-	message string
-	method  string
-	file    string
+	typeP      string
+	url        string
+	query      string
+	header     string
+	message    string
+	method     string
+	file       string
+	importPath string
+	proto      string
+	methodName string
+	verbose    bool
 }
 
 func getProtocol(p Params) Protocol {
@@ -29,6 +33,8 @@ func getProtocol(p Params) Protocol {
 		return NewGrapQL(p)
 	case "http":
 		return NewHTTP(p)
+	case "grpc":
+		return NewGRPC(p)
 	}
 	return nil
 }
@@ -49,7 +55,7 @@ var styleMessage = lipgloss.NewStyle().
 	Background(lipgloss.Color("#606683")).Padding(1).MarginBottom(1).MarginTop(1).MarginLeft(1)
 
 func main() {
-	typeParam := flag.String("t", "http", "type connection (ws, gq, http)")
+	typeParam := flag.String("t", "http", "type connection (ws, gq, http, grpc)")
 	urlParam := flag.String("u", "", "url to connect")
 	messageParam := flag.String("p", "", "data send to server")
 	queryParam := flag.String("q", "", "query params")
@@ -58,6 +64,11 @@ func main() {
 	method := flag.String("m", "GET", "method request")
 	file := flag.String("f", "", "file path")
 
+	// GRPC exclusive flags
+	importPath := flag.String("import-path", "", "The path to a directory from which proto sources can be imported, for use with -proto flags")
+	proto := flag.String("proto", "", "The proto file")
+	methodName := flag.String("method", "", "The service method to call")
+
 	flag.Parse()
 
 	if *urlParam == "" {
@@ -65,7 +76,7 @@ func main() {
 		return
 	}
 
-	validProtocos := []string{"ws", "gq", "http"}
+	validProtocos := []string{"ws", "gq", "http", "grpc"}
 
 	valid := false
 	for _, v := range validProtocos {
@@ -81,13 +92,17 @@ func main() {
 	}
 
 	params := Params{
-		typeP:   *typeParam,
-		url:     *urlParam,
-		query:   *queryParam,
-		header:  *headerP,
-		message: *messageParam,
-		method:  *method,
-		file:    *file,
+		typeP:      *typeParam,
+		url:        *urlParam,
+		query:      *queryParam,
+		header:     *headerP,
+		message:    *messageParam,
+		method:     *method,
+		file:       *file,
+		importPath: *importPath,
+		proto:      *proto,
+		methodName: *methodName,
+		verbose:    *verboseParam,
 	}
 
 	p := getProtocol(params)
