@@ -4,6 +4,7 @@ Support this protocos:
 - HTTP
 - GraphQL
 - Websocket
+- GRPC
 
 # Install
 
@@ -18,14 +19,13 @@ $ brew install ernesto27/tools/req
 ```
 
 
-
 # Usage 
 
 ### HTTP 
 
 GET
 ```bash
-$ req -u http://localhost:8080
+$ req -u http://example.com
 ```
 
 POST - send JSON body payload
@@ -64,8 +64,6 @@ Send request to grpc server
 ```bash
 $ req -t grpc -u localhost:50051 -import-path /pathprotofiles/helloworld -proto helloworld.proto -p '{"name": "ernesto"}' -method helloworld.Greeter.SayHello
 ```
-
-
 
 
 # Parameters
