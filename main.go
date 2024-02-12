@@ -63,6 +63,7 @@ func main() {
 	headerP := flag.String("h", "", "header params")
 	method := flag.String("m", "GET", "method request")
 	file := flag.String("f", "", "file path")
+	download := flag.Bool("d", false, "download content")
 
 	// GRPC exclusive flags
 	importPath := flag.String("import-path", "", "The path to a directory from which proto sources can be imported, for use with -proto flags")
@@ -116,6 +117,13 @@ func main() {
 	if err != nil {
 		fmt.Println(styleErr.Render(err.Error()))
 		return
+	}
+
+	if *download {
+		err := p.Download()
+		if err != nil {
+			fmt.Println(styleErr.Render(err.Error()))
+		}
 	}
 
 	myRender, err := glamour.NewTermRenderer(

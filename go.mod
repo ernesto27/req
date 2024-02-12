@@ -5,6 +5,7 @@ go 1.21.5
 require (
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/lipgloss v0.9.1
+	github.com/fullstorydev/grpcurl v1.8.9
 	github.com/gorilla/websocket v1.5.1
 	google.golang.org/grpc v1.61.0
 	google.golang.org/protobuf v1.32.0
@@ -16,7 +17,6 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
-	github.com/fullstorydev/grpcurl v1.8.9 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/jhump/protoreflect v1.15.3 // indirect

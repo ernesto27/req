@@ -31,6 +31,7 @@ type Protocol interface {
 	OnMessageReceived()
 	PrintHeaderResponse()
 	Close()
+	Download() error
 }
 
 type GraphQL struct {
@@ -72,6 +73,7 @@ func (g *GraphQL) RequestResponse() (string, error) {
 }
 
 func (g *GraphQL) OnMessageReceived() {}
+func (g *GraphQL) Download() error    { return nil }
 func (g *GraphQL) PrintHeaderResponse() {
 	printHttpResponse(g.httpResp)
 }
@@ -175,6 +177,8 @@ func (w *Websocket) PrintHeaderResponse() {
 	printHttpResponse(w.httpResp)
 }
 
+func (w *Websocket) Download() error { return nil }
+
 func (w *Websocket) Close() {
 	w.client.Close()
 }
@@ -186,6 +190,7 @@ type HTTP struct {
 	headers  string
 	body     string
 	file     string
+	response string
 }
 
 func NewHTTP(params Params) *HTTP {
@@ -293,10 +298,22 @@ func (h *HTTP) RequestResponse() (string, error) {
 		return "", err
 	}
 
-	return string(body), nil
+	h.response = string(body)
+
+	return h.response, nil
 }
 
 func (h *HTTP) OnMessageReceived() {}
+
+func (h *HTTP) Download() error {
+	err := saveToFile(h.response, h.url)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (h *HTTP) PrintHeaderResponse() {
 	printHttpResponse(h.httpResp)
 }
@@ -432,6 +449,7 @@ func (g *GRPC) RequestResponse() (string, error) {
 
 func (g *GRPC) OnMessageReceived()   {}
 func (g *GRPC) PrintHeaderResponse() {}
+func (g *GRPC) Download() error      { return nil }
 
 func (g *GRPC) Close() {
 	if g.cc != nil {
@@ -471,4 +489,41 @@ func GetRandomString(length int) string {
 		result[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(result)
+}
+
+func saveToFile(data string, urlVal string) error {
+	parsedURL, err := url.Parse(urlVal)
+	if err != nil {
+		return err
+	}
+
+	path := parsedURL.Path
+	hasExtension, name := hasFileExtension(path)
+
+	var fileName string
+	if hasExtension {
+		fileName = name
+	} else {
+		fileName = GetRandomString(10)
+	}
+
+	err = os.WriteFile(fileName, []byte(data), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func hasFileExtension(path string) (bool, string) {
+	segments := strings.Split(path, "/")
+
+	if len(segments) == 0 {
+		return false, ""
+	}
+
+	lastSegment := segments[len(segments)-1]
+
+	parts := strings.Split(lastSegment, ".")
+	return len(parts) >= 2, lastSegment
 }
