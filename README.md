@@ -10,12 +10,12 @@ Support this protocos:
 
 Using go 
 ```bash
-$ go install github.com/ernesto27/req@latest
+go install github.com/ernesto27/req@latest
 ```
 
 Using brew
 ```bash
-$ brew install ernesto27/tools/req
+brew install ernesto27/tools/req
 ```
 
 
@@ -25,29 +25,29 @@ $ brew install ernesto27/tools/req
 
 GET
 ```bash
-$ req -u http://example.com
+req -u http://example.com
 ```
 
 POST - send JSON body payload
 ```bash
-$ req -m post -u https://jsonplaceholder.typicode.com/posts -p '{"title": "foo", "body": "bar", "userId": 1}'
+req -m post -u https://jsonplaceholder.typicode.com/posts -p '{"title": "foo", "body": "bar", "userId": 1}'
 ```
 
 POST - send form data
 ```bash
-$ req -m post  -u https://site.com -p "foo=bar&jhon=doe"
+req -m post  -u https://site.com -p "foo=bar&jhon=doe"
 ```
 
 ### Websocket
 
 Listen for messages
 ```bash
-$ req -t ws -u wss://socketsbay.com/wss/v2/1/demo/
+req -t ws -u wss://socketsbay.com/wss/v2/1/demo/
 ```
 
 Send message
 ```bash
-$ req -t ws -p "some message"  -u wss://socketsbay.com/wss/v2/1/demo/
+req -t ws -p "some message"  -u wss://socketsbay.com/wss/v2/1/demo/
 ```
 
 
@@ -55,14 +55,14 @@ $ req -t ws -p "some message"  -u wss://socketsbay.com/wss/v2/1/demo/
 
 Send query to graphql server
 ```bash 
-$ req . -t gq -u https://countries.trevorblades.com/ -p 'query {countries {name}}'
+req -t gq -u https://countries.trevorblades.com/ -p 'query {countries {name}}'
 ```
 
 ### GRPC
 
 Send request to grpc server
 ```bash
-$ req -t grpc -u localhost:50051 -import-path /pathprotofiles/helloworld -proto helloworld.proto -p '{"name": "ernesto"}' -method helloworld.Greeter.SayHello
+req -t grpc -u localhost:50051 -import-path /pathprotofiles/helloworld -proto helloworld.proto -p '{"name": "ernesto"}' -method helloworld.Greeter.SayHello
 ```
 
 
