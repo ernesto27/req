@@ -73,7 +73,7 @@ $ req -t grpc -u localhost:50051 -import-path /pathprotofiles/helloworld -proto 
 | -u | url server |
 | -m | http method |
 | -p | data to send to server  |
-| -t | type protocol (http, ws, gq) defaut http |
+| -t | type protocol (http, ws, gq, grpc) defaut http |
 | -q | http query params |
 | -h | http headers |
 | -v | show server header response |
