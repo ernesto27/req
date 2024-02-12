@@ -79,6 +79,7 @@ $ req -t grpc -u localhost:50051 -import-path /pathprotofiles/helloworld -proto 
 | -q | http query params |
 | -h | http headers |
 | -v | show server header response |
+| -d | Download response to file|
 | -import-path | GRPC - path to proto files |
 | -proto | GRPC - proto file name |
 | -method | GRPC - method to call |
