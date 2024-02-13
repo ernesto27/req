@@ -38,6 +38,7 @@ type GraphQL struct {
 	url      string
 	query    string
 	httpResp *http.Response
+	response string
 }
 
 func NewGrapQL(params Params) *GraphQL {
@@ -69,11 +70,22 @@ func (g *GraphQL) RequestResponse() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(body), nil
+
+	g.response = string(body)
+	return g.response, nil
 }
 
 func (g *GraphQL) OnMessageReceived() {}
-func (g *GraphQL) Download() error    { return nil }
+
+func (g *GraphQL) Download() error {
+	err := saveToFile(g.response, g.url)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (g *GraphQL) PrintHeaderResponse() {
 	printHttpResponse(g.httpResp)
 }
@@ -348,6 +360,7 @@ type GRPC struct {
 	message    string
 	methodName string
 	verbose    bool
+	response   string
 }
 
 func NewGRPC(params Params) *GRPC {
@@ -444,12 +457,21 @@ func (g *GRPC) RequestResponse() (string, error) {
 		grpcurl.PrintStatus(os.Stderr, h.Status, formatter)
 	}
 
-	return buf.String(), nil
+	g.response = buf.String()
+
+	return g.response, nil
 }
 
 func (g *GRPC) OnMessageReceived()   {}
 func (g *GRPC) PrintHeaderResponse() {}
-func (g *GRPC) Download() error      { return nil }
+func (g *GRPC) Download() error {
+	err := saveToFile(g.response, g.url)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (g *GRPC) Close() {
 	if g.cc != nil {

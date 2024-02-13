@@ -55,33 +55,30 @@ var styleMessage = lipgloss.NewStyle().
 	Background(lipgloss.Color("#606683")).Padding(1).MarginBottom(1).MarginTop(1).MarginLeft(1)
 
 func main() {
-	typeParam := flag.String("t", "http", "type connection (ws, gq, http, grpc)")
-	urlParam := flag.String("u", "", "url to connect")
-	messageParam := flag.String("p", "", "data send to server")
-	queryParam := flag.String("q", "", "query params")
-	verboseParam := flag.Bool("v", false, "show response server headers")
-	headerP := flag.String("h", "", "header params")
-	method := flag.String("m", "GET", "method request")
-	file := flag.String("f", "", "file path")
-	download := flag.Bool("d", false, "download content")
+	params := Params{}
+
+	flag.StringVar(&params.typeP, "t", "http", "type connection (ws, gq, http, grpc)")
+	flag.StringVar(&params.url, "u", "", "url to connect")
+	flag.StringVar(&params.message, "p", "", "data send to server")
+	flag.StringVar(&params.query, "q", "", "query params")
+	flag.BoolVar(&params.verbose, "v", false, "show response server headers")
+	flag.StringVar(&params.header, "h", "", "header params")
+	flag.StringVar(&params.method, "m", "GET", "method request")
+	flag.StringVar(&params.file, "f", "", "file path")
 
 	// GRPC exclusive flags
-	importPath := flag.String("import-path", "", "The path to a directory from which proto sources can be imported, for use with -proto flags")
-	proto := flag.String("proto", "", "The proto file")
-	methodName := flag.String("method", "", "The service method to call")
+	flag.StringVar(&params.importPath, "import-path", "", "The path to a directory from which proto sources can be imported, for use with -proto flags")
+	flag.StringVar(&params.proto, "proto", "", "The proto file")
+	flag.StringVar(&params.methodName, "method", "", "The service method to call")
 
+	download := flag.Bool("d", false, "download content")
 	flag.Parse()
-
-	if *urlParam == "" {
-		flag.PrintDefaults()
-		return
-	}
 
 	validProtocos := []string{"ws", "gq", "http", "grpc"}
 
 	valid := false
 	for _, v := range validProtocos {
-		if *typeParam == v {
+		if params.typeP == v {
 			valid = true
 			break
 		}
@@ -92,24 +89,10 @@ func main() {
 		return
 	}
 
-	params := Params{
-		typeP:      *typeParam,
-		url:        *urlParam,
-		query:      *queryParam,
-		header:     *headerP,
-		message:    *messageParam,
-		method:     *method,
-		file:       *file,
-		importPath: *importPath,
-		proto:      *proto,
-		methodName: *methodName,
-		verbose:    *verboseParam,
-	}
-
 	p := getProtocol(params)
 	defer p.Close()
 
-	if *messageParam == "" {
+	if params.message == "" {
 		p.OnMessageReceived()
 	}
 
@@ -144,7 +127,7 @@ func main() {
 			return
 		}
 		fmt.Print(dr)
-		if *verboseParam {
+		if params.verbose {
 			p.PrintHeaderResponse()
 		}
 		return
@@ -157,7 +140,7 @@ func main() {
 	}
 	fmt.Print(out)
 
-	if *verboseParam {
+	if params.verbose {
 		p.PrintHeaderResponse()
 	}
 }
