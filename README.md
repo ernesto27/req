@@ -57,6 +57,11 @@ Send query to graphql server
 ```bash 
 req -t gq -u https://countries.trevorblades.com/ -p 'query {countries {name}}'
 ```
+Use file to send query
+```bash
+req -t gq -u https://countries.trevorblades.com/ -p @myfolder/query.txt
+```
+
 
 ### GRPC
 
@@ -72,7 +77,7 @@ req -t grpc -u localhost:50051 -import-path /pathprotofiles/helloworld -proto he
 | --- | --- |
 | -u | url server |
 | -m | http method |
-| -p | data to send to server  |
+| -p | data to send to server in raw string of use @myfolder/file to send from file  |
 | -t | type protocol (http, ws, gq, grpc) defaut http |
 | -q | http query params |
 | -h | http headers |

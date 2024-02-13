@@ -74,6 +74,20 @@ func main() {
 	download := flag.Bool("d", false, "download content")
 	flag.Parse()
 
+	if len(params.message) > 0 {
+		atSymbol := 64
+		if params.message[0] == byte(atSymbol) {
+			filePath := string(params.message[1:])
+
+			content, err := os.ReadFile(filePath)
+			if err != nil {
+				fmt.Println(styleErr.Render("Error reading file: " + err.Error()))
+				return
+			}
+			params.message = string(content)
+		}
+	}
+
 	validProtocos := []string{"ws", "gq", "http", "grpc"}
 
 	valid := false
