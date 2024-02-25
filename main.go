@@ -23,6 +23,7 @@ type Params struct {
 	proto      string
 	methodName string
 	verbose    bool
+	userAgent  string
 }
 
 func getProtocol(p Params) Protocol {
@@ -65,6 +66,7 @@ func main() {
 	flag.StringVar(&params.header, "h", "", "header params")
 	flag.StringVar(&params.method, "m", "GET", "method request")
 	flag.StringVar(&params.file, "f", "", "file path")
+	flag.StringVar(&params.userAgent, "a", "", "user agent header")
 
 	// GRPC exclusive flags
 	flag.StringVar(&params.importPath, "import-path", "", "The path to a directory from which proto sources can be imported, for use with -proto flags")

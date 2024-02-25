@@ -58,21 +58,9 @@ func (g *GraphQL) RequestResponse() (string, error) {
 		return "", err
 	}
 
-	resp, err := http.Post(g.url, "application/json", bytes.NewBuffer(payloadBytes))
-	if err != nil {
-		return "", err
-	}
-	g.httpResp = resp
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	g.response = string(body)
-	return g.response, nil
+	resp, httpResp, err := DoRequest("POST", string(payloadBytes), g.url, "", "", "")
+	g.httpResp = httpResp
+	return resp, err
 }
 
 func (g *GraphQL) OnMessageReceived() {}
@@ -124,6 +112,10 @@ func NewWebsocket(params Params) *Websocket {
 			}
 			header.Add(h[0], h[1])
 		}
+	}
+
+	if params.userAgent != "" {
+		header.Add("User-Agent", params.userAgent)
 	}
 
 	c, response, err := websocket.DefaultDialer.Dial(u.String(), header)
@@ -196,123 +188,32 @@ func (w *Websocket) Close() {
 }
 
 type HTTP struct {
-	url      string
-	method   string
-	httpResp *http.Response
-	headers  string
-	body     string
-	file     string
-	response string
+	url       string
+	method    string
+	httpResp  *http.Response
+	headers   string
+	body      string
+	file      string
+	response  string
+	userAgent string
 }
 
 func NewHTTP(params Params) *HTTP {
 	return &HTTP{
-		url:     params.url,
-		method:  params.method,
-		headers: params.header,
-		body:    params.message,
-		file:    params.file,
+		url:       params.url,
+		method:    params.method,
+		headers:   params.header,
+		body:      params.message,
+		file:      params.file,
+		userAgent: params.userAgent,
 	}
 }
 
 func (h *HTTP) RequestResponse() (string, error) {
-	client := &http.Client{}
+	resp, httpResp, err := DoRequest(h.method, h.body, h.url, h.userAgent, h.headers, h.file)
+	h.httpResp = httpResp
 
-	m := strings.ToUpper(h.method)
-
-	validMethods := []string{"GET", "POST", "DELETE", "PUT"}
-
-	found := false
-	for _, vm := range validMethods {
-		if vm == m {
-			found = true
-		}
-	}
-
-	if !found {
-		return "", fmt.Errorf("invalid method %s ", m)
-	}
-
-	var js map[string]interface{}
-	err := json.Unmarshal([]byte(h.body), &js)
-	var d io.Reader
-	var contentType string
-
-	if err != nil {
-		items := getHeaders(h.body)
-		formData := url.Values{}
-		for _, h := range items {
-			formData.Add(h.Key, h.Value)
-		}
-
-		d = strings.NewReader(formData.Encode())
-
-		if h.file != "" {
-			bodyBuf := &bytes.Buffer{}
-			bodyWriter := multipart.NewWriter(bodyBuf)
-
-			pathImg := strings.Split(h.file, "=")
-			if len(pathImg) != 2 {
-				return "", fmt.Errorf("invalid file %s, valid file=myfile.png", h.file)
-			}
-
-			file, err := os.Open(pathImg[1])
-			if err != nil {
-				return "", err
-			}
-			defer file.Close()
-
-			fileWriter, err := bodyWriter.CreateFormFile(pathImg[0], GetRandomString(10)+".png")
-			if err != nil {
-				return "", err
-			}
-
-			_, err = io.Copy(fileWriter, file)
-			if err != nil {
-				return "", err
-			}
-
-			contentType = bodyWriter.FormDataContentType()
-			_ = bodyWriter.Close()
-			d = bodyBuf
-
-		} else {
-			contentType = "application/x-www-form-urlencoded"
-		}
-
-	} else {
-		d = bytes.NewBuffer([]byte(h.body))
-		contentType = "application/json"
-	}
-
-	req, err := http.NewRequest(m, h.url, d)
-
-	req.Header.Set("Content-Type", contentType)
-	if err != nil {
-		return "", err
-	}
-
-	headersP := getHeaders(h.headers)
-	for _, h := range headersP {
-		req.Header.Add(h.Key, h.Value)
-	}
-
-	response, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
-	h.httpResp = response
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", err
-	}
-
-	h.response = string(body)
-
-	return h.response, nil
+	return resp, err
 }
 
 func (h *HTTP) OnMessageReceived() {}
@@ -548,4 +449,106 @@ func hasFileExtension(path string) (bool, string) {
 
 	parts := strings.Split(lastSegment, ".")
 	return len(parts) >= 2, lastSegment
+}
+
+func DoRequest(method string, body string, urlV string, userAgent string, headers string, file string) (string, *http.Response, error) {
+	client := &http.Client{}
+
+	m := strings.ToUpper(method)
+
+	validMethods := []string{"GET", "POST", "DELETE", "PUT"}
+
+	found := false
+	for _, vm := range validMethods {
+		if vm == m {
+			found = true
+		}
+	}
+
+	if !found {
+		return "", nil, fmt.Errorf("invalid method %s ", m)
+	}
+
+	var js map[string]interface{}
+	err := json.Unmarshal([]byte(body), &js)
+	var d io.Reader
+	var contentType string
+
+	if err != nil {
+		items := getHeaders(body)
+		formData := url.Values{}
+		for _, h := range items {
+			formData.Add(h.Key, h.Value)
+		}
+
+		d = strings.NewReader(formData.Encode())
+
+		if file != "" {
+			bodyBuf := &bytes.Buffer{}
+			bodyWriter := multipart.NewWriter(bodyBuf)
+
+			pathImg := strings.Split(file, "=")
+			if len(pathImg) != 2 {
+				return "", nil, fmt.Errorf("invalid file %s, valid file=myfile.png", file)
+			}
+
+			file, err := os.Open(pathImg[1])
+			if err != nil {
+				return "", nil, err
+			}
+			defer file.Close()
+
+			fileWriter, err := bodyWriter.CreateFormFile(pathImg[0], GetRandomString(10)+".png")
+			if err != nil {
+				return "", nil, err
+			}
+
+			_, err = io.Copy(fileWriter, file)
+			if err != nil {
+				return "", nil, err
+			}
+
+			contentType = bodyWriter.FormDataContentType()
+			_ = bodyWriter.Close()
+			d = bodyBuf
+
+		} else {
+			contentType = "application/x-www-form-urlencoded"
+		}
+
+	} else {
+		d = bytes.NewBuffer([]byte(body))
+		contentType = "application/json"
+	}
+
+	req, err := http.NewRequest(m, urlV, d)
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	req.Header.Set("Content-Type", contentType)
+	if userAgent != "" {
+		req.Header.Set("User-Agent", userAgent)
+	}
+
+	headersP := getHeaders(headers)
+	for _, h := range headersP {
+		req.Header.Add(h.Key, h.Value)
+	}
+
+	response, err := client.Do(req)
+	if err != nil {
+		return "", nil, err
+	}
+	defer response.Body.Close()
+
+	httpResp := response
+
+	bodyResp, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return string(bodyResp), httpResp, nil
 }
