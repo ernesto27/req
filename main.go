@@ -24,6 +24,7 @@ type Params struct {
 	methodName string
 	verbose    bool
 	userAgent  string
+	timeout    int
 }
 
 func getProtocol(p Params) Protocol {
@@ -67,6 +68,7 @@ func main() {
 	flag.StringVar(&params.method, "m", "GET", "method request")
 	flag.StringVar(&params.file, "f", "", "file path")
 	flag.StringVar(&params.userAgent, "a", "", "user agent header")
+	flag.IntVar(&params.timeout, "timeout", 0, "timeout in seconds")
 
 	// GRPC exclusive flags
 	flag.StringVar(&params.importPath, "import-path", "", "The path to a directory from which proto sources can be imported, for use with -proto flags")

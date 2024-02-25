@@ -84,6 +84,7 @@ req -t grpc -u localhost:50051 -import-path /pathprotofiles/helloworld -proto he
 | -v | show server header response |
 | -d | Download response to file|
 | -a | user agent http header |
+| -timeout | seconds value |
 | -import-path | GRPC - path to proto files |
 | -proto | GRPC - proto file name |
 | -method | GRPC - method to call |

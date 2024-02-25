@@ -39,6 +39,7 @@ type GraphQL struct {
 	query    string
 	httpResp *http.Response
 	response string
+	timeout  int
 }
 
 func NewGrapQL(params Params) *GraphQL {
@@ -58,7 +59,7 @@ func (g *GraphQL) RequestResponse() (string, error) {
 		return "", err
 	}
 
-	resp, httpResp, err := DoRequest("POST", string(payloadBytes), g.url, "", "", "")
+	resp, httpResp, err := DoRequest("POST", string(payloadBytes), g.url, "", "", "", g.timeout)
 	g.httpResp = httpResp
 	return resp, err
 }
@@ -196,6 +197,7 @@ type HTTP struct {
 	file      string
 	response  string
 	userAgent string
+	timeout   int
 }
 
 func NewHTTP(params Params) *HTTP {
@@ -206,11 +208,12 @@ func NewHTTP(params Params) *HTTP {
 		body:      params.message,
 		file:      params.file,
 		userAgent: params.userAgent,
+		timeout:   params.timeout,
 	}
 }
 
 func (h *HTTP) RequestResponse() (string, error) {
-	resp, httpResp, err := DoRequest(h.method, h.body, h.url, h.userAgent, h.headers, h.file)
+	resp, httpResp, err := DoRequest(h.method, h.body, h.url, h.userAgent, h.headers, h.file, h.timeout)
 	h.httpResp = httpResp
 
 	return resp, err
@@ -451,8 +454,12 @@ func hasFileExtension(path string) (bool, string) {
 	return len(parts) >= 2, lastSegment
 }
 
-func DoRequest(method string, body string, urlV string, userAgent string, headers string, file string) (string, *http.Response, error) {
+func DoRequest(method string, body string, urlV string, userAgent string, headers string, file string, timeout int) (string, *http.Response, error) {
 	client := &http.Client{}
+
+	if timeout > 0 {
+		client.Timeout = time.Duration(timeout) * time.Second
+	}
 
 	m := strings.ToUpper(method)
 
