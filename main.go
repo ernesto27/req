@@ -78,6 +78,12 @@ func main() {
 	download := flag.Bool("d", false, "download content")
 	flag.Parse()
 
+	if params.url == "" {
+		if len(os.Args) > 1 {
+			params.url = os.Args[len(os.Args)-1]
+		}
+	}
+
 	if len(params.message) > 0 {
 		atSymbol := 64
 		if params.message[0] == byte(atSymbol) {
